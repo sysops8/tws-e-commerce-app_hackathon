@@ -5,8 +5,8 @@ pipeline {
     
     environment {
         // Update the main app image name to match the deployment file
-        DOCKER_IMAGE_NAME = 'sysops8/easyshop-app'
-        DOCKER_MIGRATION_IMAGE_NAME = 'sysops8/easyshop-migration'
+        DOCKER_IMAGE_NAME = 'almsys/easyshop-app'
+        DOCKER_MIGRATION_IMAGE_NAME = 'almsys/easyshop-migration'
         DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
         GITHUB_CREDENTIALS = credentials('github-credentials')
         GIT_BRANCH = "master"
