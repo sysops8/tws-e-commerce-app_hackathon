@@ -10,6 +10,7 @@ pipeline {
         DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
         GITHUB_CREDENTIALS = credentials('github-credentials')
         GIT_BRANCH = "master"
+        HOST = 'easyshop.local.lab'
     }
     
     stages {
