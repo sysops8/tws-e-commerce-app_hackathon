@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: easyshop.letsdeployit.com
+    - host: easyshop.local.lab
       http:
         paths:
           - path: /
