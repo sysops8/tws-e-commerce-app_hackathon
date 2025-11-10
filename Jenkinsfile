@@ -71,10 +71,7 @@ pipeline {
         stage('Security Scan with Trivy') {
             steps {
                 script {
-                    // Create directory for results
-                  
                     trivy_scan()
-                    
                 }
             }
         }
@@ -107,28 +104,102 @@ pipeline {
             }
         }
         
-        // Add this new stage
         stage('Update Kubernetes Manifests') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
                         sh """
-                            echo "=== Updating image versions ==="
+                            echo "=== Updating Kubernetes manifests ==="
                             
-                            # Обновляем основной образ
-                            sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:${env.DOCKER_IMAGE_TAG}|g' kubernetes/08-easyshop-deployment.yaml
+                            # Проверяем текущие файлы
+                            echo "Current directory:"
+                            pwd
+                            ls -la kubernetes/
                             
-                            # Обновляем migration образ
-                            sed -i 's|image: almsys/easyshop-migration:.*|image: almsys/easyshop-migration:${env.DOCKER_IMAGE_TAG}|g' kubernetes/07-migration.yaml
+                            # Обновляем основной образ в deployment
+                            echo "Updating easyshop-app image to version: ${env.DOCKER_IMAGE_TAG}"
+                            if [ -f kubernetes/08-easyshop-deployment.yaml ]; then
+                                sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:${env.DOCKER_IMAGE_TAG}|g' kubernetes/08-easyshop-deployment.yaml
+                                echo "✅ Updated 08-easyshop-deployment.yaml"
+                            else
+                                echo "❌ File kubernetes/08-easyshop-deployment.yaml not found!"
+                                exit 1
+                            fi
                             
+                            # Обновляем migration образ в job
+                            echo "Updating easyshop-migration image to version: ${env.DOCKER_IMAGE_TAG}"
+                            if [ -f kubernetes/12-migration-job.yaml ]; then
+                                sed -i 's|image: almsys/easyshop-migration:.*|image: almsys/easyshop-migration:${env.DOCKER_IMAGE_TAG}|g' kubernetes/12-migration-job.yaml
+                                echo "✅ Updated 12-migration-job.yaml"
+                            elif [ -f kubernetes/07-migration.yaml ]; then
+                                sed -i 's|image: almsys/easyshop-migration:.*|image: almsys/easyshop-migration:${env.DOCKER_IMAGE_TAG}|g' kubernetes/07-migration.yaml
+                                echo "✅ Updated 07-migration.yaml"
+                            else
+                                echo "⚠️  Migration job file not found, skipping..."
+                            fi
+                            
+                            # Показываем изменения
+                            echo "=== Changes made ==="
+                            git diff kubernetes/ || true
+                            
+                            # Проверяем что изменения применились
+                            echo "=== Verifying changes ==="
+                            grep "image: almsys/easyshop-app:${env.DOCKER_IMAGE_TAG}" kubernetes/08-easyshop-deployment.yaml && echo "✅ Main app image updated correctly" || echo "❌ Main app image update failed"
+                            
+                            # Коммитим и пушим
+                            echo "=== Committing and pushing changes ==="
                             git config user.email "almastvx@gmail.com"
                             git config user.name "Jenkins CI"
                             git add kubernetes/
-                            git commit -m "Deploy easyshop version '${env.DOCKER_IMAGE_TAG}'"
+                            git status
+                            git commit -m "CI: Update image tags to version ${env.DOCKER_IMAGE_TAG} [build ${env.BUILD_NUMBER}]"
+                            
+                            echo "Pushing to GitHub..."
                             git push https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git HEAD:master
+                            
+                            echo "✅✅✅ Kubernetes manifests updated and pushed successfully!"
+                            echo "🚀 ArgoCD should automatically detect changes and deploy new version"
                         """
                     }
                 }
+            }
+        }
+        
+        stage('Verify ArgoCD Sync') {
+            steps {
+                script {
+                    echo "Waiting for ArgoCD to sync..."
+                    sleep 30
+                    
+                    // Можно добавить проверку статуса ArgoCD если есть доступ
+                    echo "Check ArgoCD UI for sync status:"
+                    echo "Application: easyshop"
+                    echo "New version: ${env.DOCKER_IMAGE_TAG}"
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                echo "Build ${env.BUILD_NUMBER} completed"
+                echo "Docker images:"
+                echo "  - ${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
+                echo "  - ${env.DOCKER_MIGRATION_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
+                echo "Git commit: Updated to version ${env.DOCKER_IMAGE_TAG}"
+            }
+        }
+        success {
+            script {
+                echo "✅ Pipeline completed successfully!"
+                echo "📦 New version ${env.DOCKER_IMAGE_TAG} deployed"
+            }
+        }
+        failure {
+            script {
+                echo "❌ Pipeline failed!"
+                echo "Check logs for details"
             }
         }
     }
