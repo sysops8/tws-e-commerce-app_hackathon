@@ -18,7 +18,7 @@ spec:
                 name: easyshop-service
                 port:
                   number: 80
-    - host: bailee-nonignitible-furtively.ngrok-free.dev   # 👈 добавляем второй домен
+    - host: easyshop.local.lab
       http:
         paths:
           - path: /
