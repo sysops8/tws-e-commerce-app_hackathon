@@ -1,17 +1,17 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: db-migration-{{BUILD_NUMBER}}  # Динамическое имя
+  name: db-migration
   namespace: easyshop
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   template:
-    metadata:
-      labels:
-        job-name: db-migration-{{BUILD_NUMBER}}
     spec:
       containers:
       - name: migration
-        image: almsys/easyshop-migration:latest
+        image: almsys/easyshop-migration:12
         imagePullPolicy: Always
         env:
         - name: MONGODB_URI
