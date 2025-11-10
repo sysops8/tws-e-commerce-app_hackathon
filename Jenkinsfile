@@ -128,6 +128,7 @@ pipeline {
                             }
                         }
                     }
+                }
     }
     
     post {
