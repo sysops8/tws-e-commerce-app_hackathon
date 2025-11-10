@@ -163,21 +163,7 @@ pipeline {
                     }
                 }
             }
-        }
-        
-        stage('Verify ArgoCD Sync') {
-            steps {
-                script {
-                    echo "Waiting for ArgoCD to sync..."
-                    sleep 30
-                    
-                    // Можно добавить проверку статуса ArgoCD если есть доступ
-                    echo "Check ArgoCD UI for sync status:"
-                    echo "Application: easyshop"
-                    echo "New version: ${env.DOCKER_IMAGE_TAG}"
-                }
-            }
-        }
+        }       
     }
     
     post {
