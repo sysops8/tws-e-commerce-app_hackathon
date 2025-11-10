@@ -117,6 +117,10 @@ pipeline {
                         gitCredentials: 'github-credentials',
                         gitUserName: 'Jenkins CI',
                         gitUserEmail: 'almastvx@gmail.com'
+                        sh """
+                            echo "=== Updating image version ==="
+                            sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:"'${env.DOCKER_IMAGE_TAG}'"|g' kubernetes/08-easyshop-deployment.yaml
+                        """
                     )
                 }
             }
