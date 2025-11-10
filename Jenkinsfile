@@ -101,39 +101,33 @@ pipeline {
                     }
                 }
             }
-        }
-        
-            stage('Update Kubernetes Manifests') {
-                steps {
-                    script {
-                        withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-                            sh """
-                                echo "=== Updating Kubernetes manifests ==="
-                                
-                                # Обновляем основной образ в deployment
-                                sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:${env.DOCKER_IMAGE_TAG}|g' kubernetes/08-easyshop-deployment.yaml
-                                
-                                # Обновляем migration образ в job
-                                sed -i 's|image: almsys/easyshop-migration:.*|image: almsys/easyshop-migration:${env.DOCKER_IMAGE_TAG}|g' kubernetes/12-migration-job.yaml
-                                
-                                # Коммитим и пушим с rebase
-                                git config user.email "almastvx@gmail.com"
-                                git config user.name "Jenkins CI"
-                                git add kubernetes/
-                                
-                                # Pull latest changes and rebase
-                                git pull --rebase https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git master
-                                
-                                git commit -m "CI: Update image tags to version ${env.DOCKER_IMAGE_TAG} [build ${env.BUILD_NUMBER}]"
-                                git push https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git HEAD:master
-                                
-                                echo "✅ Manifests updated successfully!"
-                                echo "🔄 ArgoCD will auto-sync within 3 minutes"
-                            """
+        }        
+                stage('Update Kubernetes Manifests') {
+                    steps {
+                        script {
+                            withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                                sh """
+                                    echo "=== Updating Kubernetes manifests ==="
+                                    
+                                    # Pull latest changes
+                                    git pull https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git master
+                                    
+                                    # Обновляем образы
+                                    sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:${env.DOCKER_IMAGE_TAG}|g' kubernetes/08-easyshop-deployment.yaml
+                                    sed -i 's|image: almsys/easyshop-migration:.*|image: almsys/easyshop-migration:${env.DOCKER_IMAGE_TAG}|g' kubernetes/12-migration-job.yaml
+                                    
+                                    # Коммитим и пушим
+                                    git config user.email "almastvx@gmail.com"
+                                    git config user.name "Jenkins CI"
+                                    git add kubernetes/
+                                    git commit -m "CI: Update image tags to version ${env.DOCKER_IMAGE_TAG} [build ${env.BUILD_NUMBER}]"
+                                    git push https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git HEAD:master
+                                    
+                                    echo "✅ Manifests updated successfully!"
+                                """
+                            }
                         }
                     }
-    }
-}
     }
     
     post {
