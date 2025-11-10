@@ -18,13 +18,3 @@ spec:
                 name: easyshop-service
                 port:
                   number: 80
-    - host: easyshop.local.lab
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: easyshop-service
-                port:
-                  number: 80
