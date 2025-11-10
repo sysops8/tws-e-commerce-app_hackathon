@@ -124,6 +124,7 @@ pipeline {
                                     git push https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git HEAD:master
                                     
                                     echo "✅ Manifests updated successfully!"
+                                    echo "ArgoCD следит за изминениями каждые 3 минуты"
                                 """
                             }
                         }
