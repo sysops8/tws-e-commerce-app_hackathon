@@ -111,27 +111,24 @@ pipeline {
         stage('Update Kubernetes Manifests') {
             steps {
                 script {
-                    update_k8s_manifests(
-                        imageTag: env.DOCKER_IMAGE_TAG,
-                        manifestsPath: 'kubernetes',
-                        gitCredentials: 'github-credentials',
-                        gitUserName: 'Jenkins CI',
-                        gitUserEmail: 'almastvx@gmail.com'                        
-                    withCredentials([usernamePassword(credentialsId: GITHUB_CREDENTIALS, usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-                        sh '''
-                            git clone https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git gitops-repo
-                            cd gitops-repo
-                            echo "=== Updating image version ==="
-                            sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:"'${env.DOCKER_IMAGE_TAG}'"|g' kubernetes/08-easyshop-deployment.yaml
-                            git config user.email "jenkins@local.lab"
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                        sh """
+                            echo "=== Updating image versions ==="
+                            
+                            # Обновляем основной образ
+                            sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:${env.DOCKER_IMAGE_TAG}|g' kubernetes/08-easyshop-deployment.yaml
+                            
+                            # Обновляем migration образ
+                            sed -i 's|image: almsys/easyshop-migration:.*|image: almsys/easyshop-migration:${env.DOCKER_IMAGE_TAG}|g' kubernetes/07-migration.yaml
+                            
+                            git config user.email "almastvx@gmail.com"
                             git config user.name "Jenkins CI"
-                            git add ${GITOPS_KUSTOMIZATION_PATH}
-                            git commit -m "Deploy ${MY_APP} version '${BUILD_NUMBER}'"
-                            git push origin main
-                        '''
-                    )
+                            git add kubernetes/
+                            git commit -m "Deploy easyshop version '${env.DOCKER_IMAGE_TAG}'"
+                            git push https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git HEAD:master
+                        """
+                    }
                 }
             }
         }
-    }
 }
