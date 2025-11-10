@@ -1,14 +1,17 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: db-migration
+  name: db-migration-{{BUILD_NUMBER}}  # Динамическое имя
   namespace: easyshop
 spec:
   template:
+    metadata:
+      labels:
+        job-name: db-migration-{{BUILD_NUMBER}}
     spec:
       containers:
       - name: migration
-        image: almsys/easyshop-migration:16
+        image: almsys/easyshop-migration:latest
         imagePullPolicy: Always
         env:
         - name: MONGODB_URI
