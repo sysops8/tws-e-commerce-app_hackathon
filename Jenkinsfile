@@ -116,11 +116,19 @@ pipeline {
                         manifestsPath: 'kubernetes',
                         gitCredentials: 'github-credentials',
                         gitUserName: 'Jenkins CI',
-                        gitUserEmail: 'almastvx@gmail.com'
-                        sh """
+                        gitUserEmail: 'almastvx@gmail.com'                        
+                    withCredentials([usernamePassword(credentialsId: GITHUB_CREDENTIALS, usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                        sh '''
+                            git clone https://$GIT_USER:$GIT_TOKEN@github.com/sysops8/tws-e-commerce-app_hackathon.git gitops-repo
+                            cd gitops-repo
                             echo "=== Updating image version ==="
                             sed -i 's|image: almsys/easyshop-app:.*|image: almsys/easyshop-app:"'${env.DOCKER_IMAGE_TAG}'"|g' kubernetes/08-easyshop-deployment.yaml
-                        """
+                            git config user.email "jenkins@local.lab"
+                            git config user.name "Jenkins CI"
+                            git add ${GITOPS_KUSTOMIZATION_PATH}
+                            git commit -m "Deploy ${MY_APP} version '${BUILD_NUMBER}'"
+                            git push origin main
+                        '''
                     )
                 }
             }
