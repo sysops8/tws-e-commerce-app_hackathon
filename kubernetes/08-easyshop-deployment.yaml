@@ -4,7 +4,7 @@ metadata:
   name: easyshop
   namespace: easyshop
 spec:
-  # replicas: 4
+  # replicas: 4     - количество реплик автоматически настраивается по нагрузке на CPU в файле 11-hpa.yaml, если здесь оставит, будет Out of sync в ArgoCD
   selector:
     matchLabels:
       app: easyshop
