@@ -4,7 +4,7 @@ metadata:
   name: easyshop
   namespace: easyshop
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: easyshop
