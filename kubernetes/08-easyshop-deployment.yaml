@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: easyshop
-          image: almsys/easyshop-app:19
+          image: almsys/easyshop-app:20
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
